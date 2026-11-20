@@ -1,0 +1,56 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Lares color scheme – the Android app's Material 3 colors (ui/theme/Theme.kt). */
+:root {
+  color-scheme: light;
+  --primary: #9A5326; --on-primary: #FFFFFF;
+  --primary-container: #FFDCC4; --on-primary-container: #331200;
+  --secondary: #5B6531; --secondary-container: #DFEBAA; --on-secondary-container: #191E00;
+  --tertiary: #22686F; --tertiary-container: #ABEEF6; --on-tertiary-container: #001F23;
+  --error: #BA1A1A; --error-container: #FFDAD6; --on-error-container: #410002;
+  --surface: #FFF8F3; --on-surface: #28170B;
+  --surface-variant: #F3DFD2; --on-surface-variant: #52443B;
+  --outline: #84746A; --outline-variant: #D6C3B7;
+  --surface-container-low: #FFF1E8; --surface-container: #FBEBE1;
+  --surface-container-high: #F5E5DB; --surface-container-highest: #EFDFD5;
+  --inverse-surface: #3E2D22; --inverse-on-surface: #FFEDE4; --inverse-primary: #FFB783;
+  --scrim: rgb(0 0 0 / .32);
+
+  --radius-s: 8px; --radius-m: 12px; --radius-l: 16px; --radius-xl: 28px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.43;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --primary: #FFB783; --on-primary: #532200;
+    --primary-container: #773C11; --on-primary-container: #FFDCC4;
+    --secondary: #C3CF90; --secondary-container: #434C1C; --on-secondary-container: #DFEBAA;
+    --tertiary: #8FD1DA; --tertiary-container: #004F56; --on-tertiary-container: #ABEEF6;
+    --error: #FFB4AB; --error-container: #93000A; --on-error-container: #FFDAD6;
+    --surface: #1A120D; --on-surface: #F0DFD6;
+    --surface-variant: #52443B; --on-surface-variant: #D6C3B7;
+    --outline: #9F8D83; --outline-variant: #52443B;
+    --surface-container-low: #231A14; --surface-container: #271E18;
+    --surface-container-high: #322822; --surface-container-highest: #3D332C;
+    --inverse-surface: #F0DFD6; --inverse-on-surface: #3E2D22; --inverse-primary: #9A5326;
+    --scrim: rgb(0 0 0 / .5);
+  }
+}
+html, body { margin: 0; background: var(--surface); color: var(--on-surface); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Material 3 type scale (subset) */
+.headline { font-size: 24px; line-height: 32px; font-weight: 400; }
+.title-l { font-size: 20px; line-height: 28px; font-weight: 400; }
+.title-m { font-size: 16px; line-height: 24px; font-weight: 500; }
+.title-s { font-size: 14px; line-height: 20px; font-weight: 500; }
+.body-l { font-size: 16px; line-height: 24px; }
+.body-m { font-size: 14px; line-height: 20px; }
+.body-s { font-size: 12px; line-height: 16px; }
+.label-l { font-size: 14px; line-height: 20px; font-weight: 500; }
+.muted { color: var(--on-surface-variant); }
+.error-text { color: var(--error); }
