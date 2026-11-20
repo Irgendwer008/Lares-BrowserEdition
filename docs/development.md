@@ -80,6 +80,12 @@ Stored data can be inspected in the background script's console:
   backup JSON) was verified against the Kotlin implementation when the core was ported; keep the
   formats unchanged.
 
+## Third-party code
+Everything bundled into the extension must be listed in `src/lib/licenses.ts` (shown in Settings →
+Open-source libraries) – a new runtime library or asset needs an entry with its license text.
+Versions and texts are imported from `node_modules` at build time; packages without a license file
+get one in `assets/licenses/`. Build tools don't ship and aren't listed.
+
 ## Conventions
 - TypeScript strict, Svelte 5 with runes (`$state`, `$derived`, `$props`).
 - `@/` imports point to `src/`; translations come from `#i18n`.

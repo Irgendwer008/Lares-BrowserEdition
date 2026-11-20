@@ -10,7 +10,8 @@ popup can't work (file import: the file picker would close it), the same UI open
 | `SetupScreen` | Welcome → guardian code method → password or authenticator (QR) → recovery code → done. Modes: first setup, after the recovery code was used, change from the settings | `SetupScreen` |
 | `HomeScreen` | Wordmark, settings button, status card (protection on / unlocked with time left / paused), setup issues (private windows, website access), groups (expandable, usage bar, switch, edit), single rules, "Add" button | `HomeScreen` |
 | `AddRuleScreen` | Tabs: templates (as group or single rules, limit), website (+ limit), new group. "Add to group" mode from a group card | `AddRuleScreen` |
-| `SettingsScreen` | Guardian code, reset time, countdown, warnings, export / import (+ include authenticator code), about, privacy | `SettingsScreen` |
+| `SettingsScreen` | Guardian code, reset time, countdown, warnings, export / import (+ include authenticator code), about, privacy, license, open-source libraries | `SettingsScreen` |
+| `LicensesScreen` | Lares' license (GPL summary + full text from `LICENSE`) or the shipped libraries with version, author, license, links and license text (`lib/licenses.ts`) | license screen, AboutLibraries |
 | `UnlockDialog` | Code entry with attempts left / waiting time | `UnlockDialog` |
 | `PauseDialog` | 5 min / 15 min / 1 h / custom | pause dialog |
 | `RuleDialog` | Active switch, limit, add to group / take out of group, remove | rule dialog |

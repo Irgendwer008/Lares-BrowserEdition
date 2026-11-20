@@ -3,7 +3,12 @@ import { i18n } from '#i18n';
 import { CodeRequiredError } from '@/core/data/appState';
 import type { LaresModel } from '@/lib/app.svelte';
 
-export type Screen = { name: 'home' } | { name: 'add'; groupId: number | null } | { name: 'settings' } | { name: 'changeCode' };
+export type Screen =
+  | { name: 'home' }
+  | { name: 'add'; groupId: number | null }
+  | { name: 'settings' }
+  | { name: 'changeCode' }
+  | { name: 'licenses'; view: 'license' | 'libraries' };
 
 export type Dialog =
   | { name: 'unlock' }

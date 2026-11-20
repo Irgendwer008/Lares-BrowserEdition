@@ -7,6 +7,7 @@
   import HomeScreen from './screens/HomeScreen.svelte';
   import AddRuleScreen from './screens/AddRuleScreen.svelte';
   import SettingsScreen from './screens/SettingsScreen.svelte';
+  import LicensesScreen from './screens/LicensesScreen.svelte';
   import UnlockDialog from './dialogs/UnlockDialog.svelte';
   import PauseDialog from './dialogs/PauseDialog.svelte';
   import RuleDialog from './dialogs/RuleDialog.svelte';
@@ -29,6 +30,8 @@
     <SetupScreen mode="CHANGE" onfinish={() => ui.go({ name: 'settings' })} oncancel={() => ui.go({ name: 'settings' })} />
   {:else if ui.screen.name === 'add'}
     {#key ui.screen.groupId}<AddRuleScreen groupId={ui.screen.groupId} />{/key}
+  {:else if ui.screen.name === 'licenses'}
+    {#key ui.screen.view}<LicensesScreen view={ui.screen.view} />{/key}
   {:else if ui.screen.name === 'settings'}
     <SettingsScreen {inTab} />
   {:else}

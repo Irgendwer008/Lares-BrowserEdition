@@ -9,7 +9,7 @@
 - Unlock dialog with waiting times; unlocked mode (10 min); pause; tighten / loosen rules with
   "enter code and retry".
 - Settings: change guardian code, reset time, countdown, warnings, export / import (Android format),
-  about.
+  about, license (GPL full text), open-source libraries with their license texts.
 - Setup issues: private windows not allowed (required), website access (recommended).
 - English, German, French; light and dark.
 

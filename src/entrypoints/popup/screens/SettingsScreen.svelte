@@ -149,6 +149,8 @@
   {@render row('info', i18n.t('aboutTitle'), i18n.t('aboutVersion', [browser.runtime.getManifest().version]), () => (showAbout = !showAbout))}
   {#if showAbout}<p class="about body-m muted">{i18n.t('aboutBody')}</p>{/if}
   {@render row('privacyTip', i18n.t('privacyTitle'), i18n.t('privacySummary'), null)}
+  {@render row('description', i18n.t('licenseTitle'), i18n.t('licenseSummary'), () => ui.go({ name: 'licenses', view: 'license' }))}
+  {@render row('code', i18n.t('librariesTitle'), i18n.t('librariesSummary'), () => ui.go({ name: 'licenses', view: 'libraries' }))}
 </div>
 
 <style>
