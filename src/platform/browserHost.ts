@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { BlockInfo, BlockingHost, Page } from '@/core/blocking/blockingController';
+import { countedPages, type PageState } from '@/core/blocking/countedPages';
 import { i18n } from '#i18n';
 import { withLock } from './storage';
 
 /**
- * Without input for this long the user counts as away (Android: screen off) – unless the tab plays
- * sound (videos, streams). A locked screen always stops counting.
+ * Without input for this long the user counts as away (Android: screen off) – then only media
+ * still counts (see countedPages). A locked screen stops all counting.
  */
 export const IDLE_SECONDS = 5 * 60;
 
@@ -16,27 +17,29 @@ export interface CountdownMessage {
 }
 
 /** Messages to the background script. */
-export type BackgroundMessage = { readonly type: 'sync' } | { readonly type: 'visibility'; readonly visible: boolean };
+export type BackgroundMessage = { readonly type: 'sync' } | ({ readonly type: 'pageState' } & PageState);
 
-const VISIBLE_TABS_KEY = 'visibleTabs';
+const PAGE_STATES_KEY = 'pageStates';
 
 /**
- * Tabs whose page reported being visible (page content script), kept in session storage so a
- * suspended worker remembers them. Only matters for tabs that aren't the active one: split view.
+ * What pages reported about themselves (visible – split view; picture-in-picture), kept in session
+ * storage so a suspended worker remembers it.
  */
-export const VisibleTabs = {
-  async get(): Promise<Record<number, true>> {
-    const items = await browser.storage.session.get(VISIBLE_TABS_KEY);
-    return (items[VISIBLE_TABS_KEY] as Record<number, true> | undefined) ?? {};
+export const PageStates = {
+  async get(): Promise<Record<number, PageState>> {
+    const items = await browser.storage.session.get(PAGE_STATES_KEY);
+    return (items[PAGE_STATES_KEY] as Record<number, PageState> | undefined) ?? {};
   },
 
-  set(tabId: number, visible: boolean): Promise<void> {
-    return withLock(VISIBLE_TABS_KEY, async () => {
-      const tabs = await VisibleTabs.get();
-      if (visible === (tabs[tabId] === true)) return;
-      if (visible) tabs[tabId] = true;
-      else delete tabs[tabId];
-      await browser.storage.session.set({ [VISIBLE_TABS_KEY]: tabs });
+  /** @param state null when the tab is gone. */
+  set(tabId: number, state: PageState | null): Promise<void> {
+    return withLock(PAGE_STATES_KEY, async () => {
+      const states = await PageStates.get();
+      const old = states[tabId];
+      if (state === null ? old === undefined : old?.visible === state.visible && old?.pictureInPicture === state.pictureInPicture) return;
+      if (state === null) delete states[tabId];
+      else states[tabId] = { visible: state.visible, pictureInPicture: state.pictureInPicture };
+      await browser.storage.session.set({ [PAGE_STATES_KEY]: states });
     });
   },
 };
@@ -58,20 +61,17 @@ function toPage(tab: { id?: number; url?: string }): Page | null {
 
 export class BrowserHost implements BlockingHost {
   async foreground(): Promise<Page[]> {
-    const idle = await browser.idle.queryState(IDLE_SECONDS);
-    if (idle === 'locked') return [];
-    let win;
-    try {
-      win = await browser.windows.getLastFocused();
-    } catch {
-      return []; // no window
-    }
-    if (!win.focused || win.id === undefined) return [];
-    const visible = await VisibleTabs.get();
-    return (await browser.tabs.query({ windowId: win.id }))
-      .filter((tab) => (tab.active || (tab.id !== undefined && visible[tab.id])) && !(idle === 'idle' && !tab.audible))
-      .map(toPage)
-      .filter((p): p is Page => p !== null);
+    const [idle, focused, tabs, states] = await Promise.all([
+      browser.idle.queryState(IDLE_SECONDS),
+      browser.windows.getLastFocused().catch(() => null),
+      browser.tabs.query({}),
+      PageStates.get(),
+    ]);
+    const focusedWindowId = focused?.focused && focused.id !== undefined ? focused.id : null;
+    const infos = tabs
+      .filter((t) => t.id !== undefined && t.id !== browser.tabs.TAB_ID_NONE)
+      .map((t) => ({ tabId: t.id!, url: t.url, windowId: t.windowId, active: t.active, audible: t.audible === true, muted: t.mutedInfo?.muted === true }));
+    return countedPages(infos, focusedWindowId, idle, states);
   }
 
   async openPages(): Promise<Page[]> {

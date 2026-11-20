@@ -18,11 +18,12 @@ are in the Android repo's `docs/decisions.md` and apply here unchanged.
 |---|---|
 | Website rules only; Android `APP` rules kept in the data but ignored | Extensions can't see apps; phone backups still import cleanly |
 | Event-driven engine instead of a one-second loop | MV3 background scripts are suspended when idle; events, alarms and the page countdown wake it |
-| Time counted only for visible pages in the focused window, not while idle (5 min) unless audible, not while locked | Browser equivalent of "foreground app while the screen is on" |
+| Time counted for visible pages in the focused window while the user is active (5 min idle), not while locked | Browser equivalent of "foreground app while the screen is on" |
 | Split view: every visible tab counts, in one step | Same as Android's split screen / picture-in-picture handling |
 | Redirect to an extension block page; incognito tabs in Chrome are closed instead | Clear reason and next steps like Android's block screen; Chrome can't show extension pages in incognito |
 | Check `onBeforeNavigate` in addition to syncs | Blocked sites never flash |
 | Usage period start backdated when tracking starts late | Otherwise the next reset comes too late (bug in the Android app) |
+| Media with sound and picture-in-picture count, also in the background / with another program in front | Like Android counting picture-in-picture; music or videos in the background use up the limit instead of running for free. Muted media in background tabs doesn't count – sites autoplay silent previews |
 | Website access only needed for countdown and split view | Blocking itself works with the `tabs` permission; fewer required permissions in Firefox |
 
 ## Guardian code & security

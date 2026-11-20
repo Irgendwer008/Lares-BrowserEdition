@@ -24,7 +24,11 @@ settings. From now on the `.yml` files are the source; add new keys to all three
 - No string concatenation – positional placeholders `$1`, `$2`, since word order differs. Where a
   link sits inside a sentence, the sentence is split into "before" / "after" keys.
 - Plurals with the `1:` / `n:` form.
-- Dates and times with `toLocaleTimeString` / `toLocaleString`, never by hand.
+- Dates and times with `Intl` in the browser's UI language, never by hand: `lib/timeFormat.ts`
+  (`formatTime`, `formatMinuteOfDay`, `uiLocale`). 24-hour clock with leading zero where the
+  language uses it (de, fr, en-GB: "08:00"), otherwise 12-hour with AM / PM ("8:00 AM"). Time
+  inputs use `TimeField` (hour / minute selects, AM / PM only for 12-hour languages) instead of
+  `<input type="time">`, whose format follows the operating system.
 - Leave room for longer texts (German is ~30 % longer).
 - Brand and service names (YouTube, Telegram …) aren't translated.
 

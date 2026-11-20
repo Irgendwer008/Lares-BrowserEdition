@@ -5,11 +5,14 @@ import type { BackgroundMessage, CountdownMessage } from '@/platform/browserHost
 /**
  * Runs in every web page:
  * - Reports whether the page is visible, so tabs shown side by side (split view, e.g. in Zen) count
- *   like the active tab (Android: apps visible in split screen count too).
+ *   like the active tab (Android: apps visible in split screen count too), and whether one of its
+ *   videos is in picture-in-picture (Chrome tells pages; Firefox's own picture-in-picture doesn't),
+ *   which counts like media playing in the background.
  * - Countdown pill in the last minutes of a daily limit (Android: TimerOverlay). The background
  * script sends the remaining time; the pill counts down by itself and asks the background script
  * to check again when it reaches zero, so the page is blocked right on time even while the
- * background worker is suspended. Not interactive (pointer-events: none).
+ * background worker is suspended. Not interactive (pointer-events: none), and it slides out of
+ * the way when the cursor comes near, so the page underneath stays visible and usable.
  */
 export default defineContentScript({
   matches: ['http://*/*', 'https://*/*'],
@@ -39,11 +42,15 @@ export default defineContentScript({
             font: 600 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
             padding: 8px 14px; border-radius: 999px; color: #FFFFFF; background: #9A5326;
             box-shadow: 0 2px 8px rgba(0, 0, 0, .25); font-variant-numeric: tabular-nums;
+            transition: transform .18s ease-out;
           }
+          @media (prefers-reduced-motion: reduce) { div { transition: none; } }
         </style>
         <div role="timer" aria-live="off"></div>`;
       label = shadow.querySelector('div');
       document.documentElement.append(host);
+      document.addEventListener('mousemove', onMouseMove, { passive: true });
+      document.documentElement.addEventListener('mouseleave', resetDodge);
       return label!;
     }
 
@@ -52,6 +59,49 @@ export default defineContentScript({
       timer = undefined;
       host?.remove();
       host = label = null;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.documentElement.removeEventListener('mouseleave', resetDodge);
+      cancelAnimationFrame(dodgeFrame);
+    }
+
+    // ---- Dodging the cursor ----
+    /** Distance (px) of the pill from the top and right edge. */
+    const PILL_INSET = 12;
+    /** How close (px) the cursor may come before the pill moves. */
+    const DODGE_MARGIN = 24;
+    let dodgeFrame = 0;
+    let cursor: { x: number; y: number } | null = null;
+
+    function onMouseMove(e: MouseEvent) {
+      cursor = { x: e.clientX, y: e.clientY };
+      if (!dodgeFrame) dodgeFrame = requestAnimationFrame(dodge);
+    }
+
+    function resetDodge() {
+      cursor = null;
+      if (label) label.style.transform = '';
+    }
+
+    /**
+     * Moves the pill just far enough that the cursor is DODGE_MARGIN away from it – left or down,
+     * whichever is the smaller move – and back home when the cursor leaves. Measured against the
+     * pill's home position (not where it is while sliding), so it doesn't jitter.
+     */
+    function dodge() {
+      dodgeFrame = 0;
+      if (!label || !cursor) return;
+      // Home position from the layout (fixed at top / right PILL_INSET; offset sizes ignore transforms).
+      const right = document.documentElement.clientWidth - PILL_INSET;
+      const home = { left: right - label.offsetWidth, right, top: PILL_INSET, bottom: PILL_INSET + label.offsetHeight };
+      const { x, y } = cursor;
+      const near = x > home.left - DODGE_MARGIN && x < home.right + DODGE_MARGIN && y > home.top - DODGE_MARGIN && y < home.bottom + DODGE_MARGIN;
+      if (!near) {
+        label.style.transform = '';
+        return;
+      }
+      const left = home.right - (x - DODGE_MARGIN); // move left so the right edge clears the cursor
+      const down = y + DODGE_MARGIN - home.top; // move down so the top edge clears the cursor
+      label.style.transform = left <= down ? `translateX(${-left}px)` : `translateY(${down}px)`;
     }
 
     function render() {
@@ -74,16 +124,19 @@ export default defineContentScript({
       timer ??= setInterval(render, 1000);
     });
 
-    function reportVisibility() {
-      const message: BackgroundMessage = { type: 'visibility', visible: !document.hidden };
+    function reportState() {
+      const message: BackgroundMessage = { type: 'pageState', visible: !document.hidden, pictureInPicture: document.pictureInPictureElement != null };
       void browser.runtime.sendMessage(message).catch(() => {});
     }
+    // These events are fired on the video; capturing listeners on the document see them.
+    document.addEventListener('enterpictureinpicture', reportState, true);
+    document.addEventListener('leavepictureinpicture', reportState, true);
 
     // A hidden page isn't counted; the background script sends the countdown again when it's back.
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) hide();
-      reportVisibility();
+      reportState();
     });
-    reportVisibility();
+    reportState();
   },
 });

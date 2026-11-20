@@ -13,6 +13,7 @@
   import OptionCard from '@/lib/ui/OptionCard.svelte';
   import TextField from '@/lib/ui/TextField.svelte';
   import Wordmark from '@/lib/ui/Wordmark.svelte';
+  import { uiLocale } from '@/lib/timeFormat';
   import { ui, useModel } from '../ui.svelte';
 
   let { mode, onfinish, oncancel }: { mode: 'FIRST' | 'RECOVERY' | 'CHANGE'; onfinish: () => void; oncancel?: () => void } = $props();
@@ -92,7 +93,7 @@
   }
 
   function saveRecovery() {
-    const created = new Date().toLocaleString();
+    const created = new Date().toLocaleString(uiLocale());
     const text = i18n.t('recoveryFileContent', [recovery, created]);
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
     const a = Object.assign(document.createElement('a'), { href: url, download: 'lares-recovery-code.txt' });

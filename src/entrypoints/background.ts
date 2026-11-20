@@ -2,7 +2,7 @@
 import { BlockingController } from '@/core/blocking/blockingController';
 import { systemZone } from '@/core/time/zonedTime';
 import { BrowserClock } from '@/platform/browserClock';
-import { BrowserHost, IDLE_SECONDS, isBlockPage, VisibleTabs, type BackgroundMessage } from '@/platform/browserHost';
+import { BrowserHost, IDLE_SECONDS, isBlockPage, PageStates, type BackgroundMessage } from '@/platform/browserHost';
 import { KEYS, SessionSegmentStore, StorageGroupStore, StorageRuleStore, StorageStateStore, StorageUsageStore } from '@/platform/storage';
 
 /** Regular check: counts time, saves the clock, catches anything an event missed. */
@@ -69,9 +69,9 @@ export default defineBackground(() => {
 
   browser.tabs.onActivated.addListener(() => syncSoon());
   browser.tabs.onUpdated.addListener((_tabId, change) => {
-    if (change.url !== undefined || change.audible !== undefined) syncSoon();
+    if (change.url !== undefined || change.audible !== undefined || change.mutedInfo !== undefined) syncSoon();
   });
-  browser.tabs.onRemoved.addListener((tabId) => void VisibleTabs.set(tabId, false).then(syncSoon));
+  browser.tabs.onRemoved.addListener((tabId) => void PageStates.set(tabId, null).then(syncSoon));
   browser.windows.onFocusChanged.addListener(() => syncSoon());
   browser.idle.onStateChanged.addListener(() => syncSoon());
 
@@ -88,8 +88,8 @@ export default defineBackground(() => {
 
   browser.runtime.onMessage.addListener((message: BackgroundMessage, sender) => {
     if (message?.type === 'sync') syncSoon();
-    else if (message?.type === 'visibility' && sender.tab?.id !== undefined) {
-      void VisibleTabs.set(sender.tab.id, message.visible).then(syncSoon);
+    else if (message?.type === 'pageState' && sender.tab?.id !== undefined) {
+      void PageStates.set(sender.tab.id, { visible: message.visible, pictureInPicture: message.pictureInPicture }).then(syncSoon);
     }
   });
 

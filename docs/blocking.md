@@ -20,10 +20,10 @@ the engine is **event-driven**. Every `sync()`:
 2. Counts the time since the previous sync for what was being counted then (the persisted
    "segment"; at most 2 minutes per step, so time while the computer slept isn't counted).
 3. Blocks every open tab whose page is blocked now.
-4. Determines the **visible pages** and starts a new segment for the limits they use.
+4. Determines the **counted pages** (see below) and starts a new segment for the limits they use.
 5. Shows / hides countdowns and warnings and returns when the next check is due.
 
-`sync()` runs on: tab switched, page loaded or URL changed, tab audible changed, tab closed, window
+`sync()` runs on: tab switched, page loaded or URL changed, tab audible / muted changed, tab closed, window
 focus changed, idle state changed, rules / settings changed, a page's visibility changed, a 30 s
 alarm, a timer + alarm at the moment a limit runs out, the countdown reaching zero in the page, and
 when the popup opens.
@@ -31,19 +31,23 @@ when the popup opens.
 `webNavigation.onBeforeNavigate` additionally checks a top-level navigation **before** the page
 loads (`checkNavigation`), so a blocked site is replaced without flashing.
 
-## Visible pages (Android: foreground app + split screen)
-A page counts while the user can see it:
-- the active tab of the **focused** browser window, plus
-- other tabs of that window whose page reports `document.visibilityState === 'visible'` – tabs shown
-  side by side in a **split view** (e.g. Zen). Like Android's split screen, everything visible
-  counts, in one step, so a group shown twice counts once; a blocked page beside an allowed one is
-  blocked.
+## Counted pages (Android: foreground app + split screen + picture-in-picture)
+`core/blocking/countedPages.ts` decides which pages count right now:
+- **In front:** the active tab of the **focused** browser window, plus other tabs of that window whose
+  page reports `document.visibilityState === 'visible'` – tabs shown side by side in a **split
+  view** (e.g. Zen). Only while the user is active (input within the last 5 minutes, `idle` API).
+- **Media:** any tab **playing sound** (the browser's speaker indicator, not muted) or showing a
+  video in **picture-in-picture** – also in background tabs, other windows and while another
+  program is in front, and also while the user is idle. Muted autoplay previews in background tabs
+  don't count. Picture-in-picture is only known where the browser tells the page (Chrome); Firefox's
+  own picture-in-picture counts through its sound.
+- **Nothing** counts while the screen is locked.
 
-Nothing counts while the browser isn't the focused application, while the screen is locked, or
-after 5 minutes without input (`idle` API) – unless the tab plays sound (videos, streams).
+Everything counted is added in one step, so a group shown twice counts once (like Android); a
+blocked page beside an allowed one is blocked.
 
-Visibility comes from the page script (`page.content.ts`), which needs access to websites. Without
-it only the active tab counts.
+Visibility and picture-in-picture come from the page script (`page.content.ts`), which needs access
+to websites. Without it only the active tab and tabs playing sound count.
 
 ## Usage period
 - The daily reset time is configurable (default midnight). Changing it needs the guardian code and
@@ -66,8 +70,9 @@ instead.
 ## Countdown and warnings
 - **Countdown** (switchable, default on): a pill in the top-right corner of each visible page during
   the last 5 minutes of a limit. It counts down on its own and asks for a check when it reaches
-  zero, so the page is blocked on time even while the background script sleeps. Needs access to
-  websites.
+  zero, so the page is blocked on time even while the background script sleeps. Clicks pass through
+  it, and it slides out of the way (left or down, whichever is the smaller move) when the cursor
+  comes within 24 px, so the page underneath stays visible. Needs access to websites.
 - **Warnings** (opt-in): browser notifications 5 and / or 1 minute before a limit runs out – one per
   limit, removed when the page is no longer visible.
 
@@ -79,5 +84,5 @@ with letter icons in the brand color (no logos, no favicon fetching).
 ## Known limits
 - Other browsers, other browser profiles and (unless allowed) private windows aren't covered.
 - Disabling or removing the extension stops blocking – see [Unlock & security](unlock-and-security.md).
-- Picture-in-picture video windows don't count.
+- Muted video in Firefox's own picture-in-picture doesn't count (Firefox doesn't tell the page).
 - A page that is visible but in an unfocused window doesn't count.

@@ -25,7 +25,7 @@ Navigation state, dialogs, snackbar and the "needs the code → unlock → retry
   the system, as CSS variables in `lib/theme.css` (`--primary`, `--primary-container`,
   `--surface-variant` …). Material You (wallpaper colors) doesn't exist in browsers.
 - **Components** (`lib/ui/`): `Button` (filled / tonal / outlined / text), `IconButton`, `Switch`,
-  `TextField` (outlined), `Dialog`, `OptionCard`, `TopBar`, `UsageBar`, `LetterIcon`, `Wordmark`,
+  `TextField` (outlined), `TimeField` (time of day in the language's 12 / 24-hour format), `Dialog`, `OptionCard`, `TopBar`, `UsageBar`, `LetterIcon`, `Wordmark`,
   `LaresMark`.
 - **Icons:** the Material icons the Android app uses, extracted from its `res/drawable/ic_*.xml`
   (`lib/ui/icons.ts`).

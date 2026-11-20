@@ -4,6 +4,7 @@
   import { i18n } from '#i18n';
   import LaresMark from '@/lib/ui/LaresMark.svelte';
   import { UrlMatcher } from '@/core/policy/urlMatcher';
+  import { formatTime } from '@/lib/timeFormat';
 
   const params = new URLSearchParams(location.search);
   const url = params.get('url') ?? '';
@@ -17,7 +18,7 @@
   function resetText(): string {
     const at = new Date(resetAt);
     if (at.getHours() === 0 && at.getMinutes() === 0) return i18n.t('blockResetMidnight');
-    return at.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return formatTime(at);
   }
 
   const reasonText = reason === 'LIMIT_REACHED' && Number.isFinite(resetAt) ? i18n.t('blockReasonLimit', [resetText()]) : i18n.t('blockReasonAlways');

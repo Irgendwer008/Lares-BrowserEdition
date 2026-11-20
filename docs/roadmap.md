@@ -5,6 +5,7 @@
 - Blocking engine: block page, early blocking on navigation, time counting for visible pages
   (incl. split view), idle / lock detection, daily reset with monotonic periods.
 - Countdown in the last 5 minutes; optional warning notifications.
+- Media with sound and picture-in-picture (Chrome) count toward limits, also in the background.
 - Setup: password or authenticator app (QR), recovery code (copy / save), first setup ends unlocked.
 - Unlock dialog with waiting times; unlocked mode (10 min); pause; tighten / loosen rules with
   "enter code and retry".
@@ -32,7 +33,6 @@ test in Chromium.
 
 ## Ideas / later
 - Remember already shown warnings across background-script restarts (now they may be shown again).
-- Picture-in-picture video windows counting toward limits.
 - `declarativeNetRequest` rules for always-blocked sites (blocking without waking the background
   script).
 

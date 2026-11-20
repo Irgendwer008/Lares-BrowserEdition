@@ -9,7 +9,9 @@
   import type { IconName } from '@/lib/ui/icons';
   import Switch from '@/lib/ui/Switch.svelte';
   import TopBar from '@/lib/ui/TopBar.svelte';
-  import { formatMinuteOfDay, ui, useModel } from '../ui.svelte';
+  import TimeField from '@/lib/ui/TimeField.svelte';
+  import { formatMinuteOfDay } from '@/lib/timeFormat';
+  import { ui, useModel } from '../ui.svelte';
 
   let { inTab }: { inTab: boolean } = $props();
   const model = useModel();
@@ -17,24 +19,20 @@
   const settings = $derived(model.state.settings);
   const schedule = $derived(resetScheduleOf(settings));
 
-  let resetInput = $state('');
-  $effect(() => {
-    const m = settings.resetMinuteOfDay;
-    resetInput = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-  });
+  /** Bumped when a change wasn't applied (needs the code), so the field shows the stored time again. */
+  let resetKey = $state(0);
 
   const hasTotpPackage = $derived(model.state.unlock.method === 'TOTP' && model.state.unlock.totpTransfer !== null);
   let importInput: HTMLInputElement | undefined = $state();
   let showAbout = $state(false);
+  const SOURCE_URL = 'https://github.com/Irgendwer008/Lares-BrowserEdition';
 
   function changeCode() {
     ui.whenUnlocked(model.isUnlocked, () => ui.go({ name: 'changeCode' }));
   }
 
-  function setResetTime() {
-    const [h, m] = resetInput.split(':').map(Number);
-    if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return;
-    void ui.guarded(() => settingsRepo.setResetTime(h * 60 + m));
+  async function setResetTime(minuteOfDay: number) {
+    if (!(await ui.guarded(() => settingsRepo.setResetTime(minuteOfDay)))) resetKey++;
   }
 
   async function exportRules() {
@@ -106,7 +104,7 @@
           : i18n.t('settingsResetTimeExplanation')}
       </span>
     </span>
-    <input type="time" class="time" bind:value={resetInput} onchange={setResetTime} aria-label={i18n.t('settingsResetTime')} />
+    {#key resetKey}<TimeField value={settings.pendingResetMinuteOfDay ?? settings.resetMinuteOfDay} label={i18n.t('settingsResetTime')} onchange={setResetTime} />{/key}
   </div>
   <div class="row">
     <Icon name="timer" />
@@ -147,7 +145,12 @@
 
   <h2 class="section title-s">{i18n.t('settingsGroupApp')}</h2>
   {@render row('info', i18n.t('aboutTitle'), i18n.t('aboutVersion', [browser.runtime.getManifest().version]), () => (showAbout = !showAbout))}
-  {#if showAbout}<p class="about body-m muted">{i18n.t('aboutBody')}</p>{/if}
+  {#if showAbout}
+    <div class="about">
+      <p class="body-m muted">{i18n.t('aboutBody')}</p>
+      <a class="body-m" href={SOURCE_URL} target="_blank" rel="noreferrer">{i18n.t('librariesSource')}: {SOURCE_URL.replace('https://', '')}</a>
+    </div>
+  {/if}
   {@render row('privacyTip', i18n.t('privacyTitle'), i18n.t('privacySummary'), null)}
   {@render row('description', i18n.t('licenseTitle'), i18n.t('licenseSummary'), () => ui.go({ name: 'licenses', view: 'license' }))}
   {@render row('code', i18n.t('librariesTitle'), i18n.t('librariesSummary'), () => ui.go({ name: 'licenses', view: 'libraries' }))}
@@ -166,6 +169,6 @@
   button.row:hover { background: color-mix(in srgb, var(--on-surface) 5%, transparent); }
   .text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .icon-space { width: 24px; flex: none; }
-  .time { border: 1px solid var(--outline); border-radius: 4px; background: transparent; color: var(--on-surface); padding: 6px 8px; }
-  .about { padding: 0 16px 8px 56px; white-space: pre-line; }
+  .about { padding: 0 16px 8px 56px; white-space: pre-line; display: flex; flex-direction: column; gap: 8px; }
+  .about a { color: var(--primary); font-weight: 500; overflow-wrap: anywhere; }
 </style>

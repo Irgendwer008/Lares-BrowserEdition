@@ -116,9 +116,3 @@ export function formatDuration(minutes: number): string {
   if (m === 0) return i18n.t('durationHours', h);
   return `${i18n.t('durationHours', h)} ${i18n.t('durationMinutes', m)}`;
 }
-
-/** Local time of day for a minute-of-day value. */
-export function formatMinuteOfDay(minuteOfDay: number): string {
-  const d = new Date(2000, 0, 1, Math.floor(minuteOfDay / 60), minuteOfDay % 60);
-  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-}
